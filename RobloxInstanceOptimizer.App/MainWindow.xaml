@@ -37,7 +37,7 @@
                            FontSize="28"
                            FontWeight="SemiBold"
                            Foreground="#172033" />
-                <TextBlock Text="Nettoyage RAM automatique type Mem Reduct, priorité CPU et allocation de coeurs par instance Roblox."
+                <TextBlock Text="Mem Reduct-style automatic RAM cleanup, CPU priority, and core allocation per Roblox instance."
                            Margin="0,5,0,0"
                            Foreground="#536072" />
             </StackPanel>
@@ -67,19 +67,17 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="0"
-                        Content="Scanner"
+                        Content="Scan"
                         Click="RefreshButton_Click" />
                 <Button Grid.Column="1"
-                        Content="Appliquer sélection"
+                        Content="Apply selected"
                         Click="ApplySelectedButton_Click" />
                 <Button Grid.Column="2"
-                        Content="Appliquer tout"
+                        Content="Apply all"
                         Click="ApplyAllButton_Click" />
                 <CheckBox Grid.Column="3"
                           x:Name="AutoRefreshCheckBox"
@@ -89,7 +87,7 @@
                           Margin="12,0,0,0" />
                 <CheckBox Grid.Column="4"
                           x:Name="AutoTrimCheckBox"
-                          Content="Nettoyage RAM auto"
+                          Content="Auto RAM cleanup"
                           IsChecked="True"
                           VerticalAlignment="Center"
                           Margin="16,0,0,0" />
@@ -117,24 +115,24 @@
                     <ColumnDefinition Width="150" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0"
-                           Text="Defaut RAM (Mo)"
+                           Text="Default RAM (MB)"
                            Margin="0,0,8,0"
                            Foreground="#536072" />
                 <TextBox Grid.Column="1"
                          x:Name="DefaultMemoryThresholdTextBox" />
                 <TextBlock Grid.Column="2"
-                           Text="Coeurs"
+                           Text="Cores"
                            Margin="14,0,8,0"
                            Foreground="#536072" />
                 <TextBox Grid.Column="3"
                          x:Name="DefaultCoreCountTextBox" />
                 <TextBlock Grid.Column="4"
-                           Text="Priorite"
+                           Text="Priority"
                            Margin="14,0,8,0"
                            Foreground="#536072" />
                 <ComboBox Grid.Column="5"
@@ -143,22 +141,22 @@
                           Padding="8,4" />
                 <CheckBox Grid.Column="6"
                           x:Name="AutoApplyDefaultsCheckBox"
-                          Content="Appliquer aux nouvelles instances"
+                          Content="Apply to new instances"
                           IsChecked="True"
                           VerticalAlignment="Center"
                           Margin="16,0,0,0" />
                 <CheckBox Grid.Column="7"
                           x:Name="AutoDistributeCoresCheckBox"
-                          Content="Repartir coeurs auto"
+                          Content="Auto-distribute cores"
                           IsChecked="True"
                           VerticalAlignment="Center"
                           Margin="16,0,0,0" />
                 <Button Grid.Column="8"
-                        Content="Sauvegarder defauts"
+                        Content="Save defaults"
                         Click="SaveDefaultsButton_Click"
                         Margin="16,0,8,0" />
                 <Button Grid.Column="9"
-                        Content="Mettre sur tout"
+                        Content="Set on all"
                         HorizontalAlignment="Left"
                         Click="ApplyDefaultsToAllButton_Click" />
             </Grid>
@@ -182,36 +180,36 @@
                                     Binding="{Binding ProcessId}"
                                     IsReadOnly="True"
                                     Width="80" />
-                <DataGridTextColumn Header="Fenêtre / compte"
+                <DataGridTextColumn Header="Window / account"
                                     Binding="{Binding DisplayName}"
                                     IsReadOnly="True"
                                     Width="2*" />
-                <DataGridTextColumn Header="RAM actuelle"
+                <DataGridTextColumn Header="Current RAM"
                                     Binding="{Binding MemoryText}"
                                     IsReadOnly="True"
                                     Width="120" />
-                <DataGridTemplateColumn Header="Seuil nettoyage (Mo)" Width="160">
+                <DataGridTemplateColumn Header="Cleanup threshold (MB)" Width="170">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding MemoryLimitMb, UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Coeurs" Width="100">
+                <DataGridTemplateColumn Header="Cores" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding CoreCount, UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Depart" Width="90">
+                <DataGridTemplateColumn Header="Start" Width="90">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBox Text="{Binding StartCore, UpdateSourceTrigger=PropertyChanged}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Priorité" Width="150">
+                <DataGridTemplateColumn Header="Priority" Width="150">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ComboBox ItemsSource="{Binding DataContext.PriorityOptions, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -220,11 +218,11 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Affinité"
+                <DataGridTextColumn Header="Affinity"
                                     Binding="{Binding AffinityText}"
                                     IsReadOnly="True"
                                     Width="120" />
-                <DataGridTextColumn Header="Statut"
+                <DataGridTextColumn Header="Status"
                                     Binding="{Binding Status}"
                                     IsReadOnly="True"
                                     Width="2*" />
@@ -240,7 +238,7 @@
                 Margin="0,14,0,0">
             <TextBlock Foreground="#6C4F00"
                        TextWrapping="Wrap"
-                       Text="Note: ce mode ne bloque plus la RAM. Quand une instance dépasse le seuil, l'app demande à Windows de vider une partie de sa mémoire active, comme Mem Reduct. Roblox peut remonter ensuite, donc le nettoyage se répète automatiquement." />
+                       Text="Note: this mode does not hard-limit RAM. When an instance goes above the threshold, the app asks Windows to trim part of its active memory, similar to Mem Reduct. Roblox may grow again, so cleanup repeats automatically." />
         </Border>
     </Grid>
 </Window>

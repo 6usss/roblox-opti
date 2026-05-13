@@ -26,7 +26,7 @@ function Test-DotNetSdk {
 }
 
 function Install-DotNetSdk {
-    Write-Step "Installation du SDK .NET 8 dans le profil utilisateur"
+    Write-Step "Installing .NET 8 SDK in the user profile"
     $dotnetDir = Join-Path $env:LOCALAPPDATA "Microsoft\dotnet"
     $installerPath = Join-Path $tempRoot "dotnet-install.ps1"
     Invoke-WebRequest "https://dot.net/v1/dotnet-install.ps1" -OutFile $installerPath
@@ -34,7 +34,7 @@ function Install-DotNetSdk {
     $env:PATH = "$dotnetDir;$env:PATH"
 }
 
-Write-Step "Preparation"
+Write-Step "Preparing"
 if (Test-Path $tempRoot) {
     Remove-Item $tempRoot -Recurse -Force
 }
@@ -44,11 +44,11 @@ if (-not (Test-DotNetSdk)) {
     Install-DotNetSdk
 }
 
-Write-Step "Telechargement du repo $repoOwner/$repoName"
+Write-Step "Downloading repo $repoOwner/$repoName"
 Invoke-WebRequest $repoZipUrl -OutFile $zipPath
 Expand-Archive $zipPath -DestinationPath $tempRoot -Force
 
-Write-Step "Publication de l'application"
+Write-Step "Publishing the app"
 dotnet publish (Join-Path $sourceDir "RobloxInstanceOptimizer.App\RobloxInstanceOptimizer.App.csproj") `
     -c Release `
     -r win-x64 `
@@ -57,7 +57,7 @@ dotnet publish (Join-Path $sourceDir "RobloxInstanceOptimizer.App\RobloxInstance
     /p:IncludeNativeLibrariesForSelfExtract=true `
     -o $publishDir
 
-Write-Step "Installation dans $installDir"
+Write-Step "Installing to $installDir"
 if (Test-Path $installDir) {
     Remove-Item $installDir -Recurse -Force
 }
@@ -67,7 +67,7 @@ Copy-Item (Join-Path $publishDir "*") $installDir -Recurse -Force
 $exePath = Join-Path $installDir "RobloxInstanceOptimizer.App.exe"
 $shortcutPath = Join-Path ([Environment]::GetFolderPath("Desktop")) "Roblox Instance Optimizer.lnk"
 
-Write-Step "Creation du raccourci bureau"
+Write-Step "Creating desktop shortcut"
 $shell = New-Object -ComObject WScript.Shell
 $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $exePath
@@ -75,10 +75,10 @@ $shortcut.WorkingDirectory = $installDir
 $shortcut.Description = "Roblox Instance Optimizer"
 $shortcut.Save()
 
-Write-Step "Nettoyage"
+Write-Step "Cleaning up"
 Remove-Item $tempRoot -Recurse -Force
 
 Write-Host ""
-Write-Host "Installation terminee." -ForegroundColor Green
-Write-Host "Lance le raccourci 'Roblox Instance Optimizer' en administrateur depuis le bureau."
-Write-Host "Exe installe: $exePath"
+Write-Host "Installation complete." -ForegroundColor Green
+Write-Host "Run the 'Roblox Instance Optimizer' desktop shortcut as administrator."
+Write-Host "Installed exe: $exePath"

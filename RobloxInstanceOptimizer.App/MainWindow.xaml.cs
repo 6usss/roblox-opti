@@ -34,8 +34,8 @@ public partial class MainWindow : Window
         LoadSettingsIntoControls();
 
         AdminStatusText.Text = IsRunningAsAdministrator()
-            ? "Administrateur: oui"
-            : "Administrateur: non";
+            ? "Administrator: yes"
+            : "Administrator: no";
 
         _refreshTimer = new DispatcherTimer
         {
@@ -79,7 +79,7 @@ public partial class MainWindow : Window
     private void SaveDefaultsButton_Click(object sender, RoutedEventArgs e)
     {
         SaveSettingsFromControls();
-        StatusText.Text = $"Defauts sauvegardes: {AppSettings.SettingsPath}";
+        StatusText.Text = $"Defaults saved: {AppSettings.SettingsPath}";
     }
 
     private void ApplyDefaultsToAllButton_Click(object sender, RoutedEventArgs e)
@@ -138,8 +138,8 @@ public partial class MainWindow : Window
 
         _optimizer.PruneDeadJobs(liveIds);
         StatusText.Text = Instances.Count == 0
-            ? "Aucune instance Roblox detectee."
-            : $"{Instances.Count} instance(s) Roblox detectee(s).";
+            ? "No Roblox instances detected."
+            : $"{Instances.Count} Roblox instance(s) detected.";
     }
 
     private void ApplyRows(IEnumerable<RobloxInstanceRow> rows, bool refreshAfterApply = true)
@@ -151,7 +151,7 @@ public partial class MainWindow : Window
             try
             {
                 _optimizer.Apply(row);
-                row.Status = $"CPU applique: depart {row.StartCore}, {row.CoreCount} coeur(s). Nettoyage > {row.MemoryLimitMb} Mo.";
+                row.Status = $"CPU applied: start {row.StartCore}, {row.CoreCount} core(s). Cleanup > {row.MemoryLimitMb} MB.";
                 applied++;
             }
             catch (Exception ex)
@@ -165,7 +165,7 @@ public partial class MainWindow : Window
             RefreshInstances();
         }
 
-        StatusText.Text = $"Reglages appliques sur {applied} instance(s).";
+        StatusText.Text = $"Settings applied to {applied} instance(s).";
     }
 
     private static void UpdateRuntimeInfo(Process process, RobloxInstanceRow row)
@@ -227,7 +227,7 @@ public partial class MainWindow : Window
             {
                 if (_optimizer.TrimMemoryIfNeeded(row, MinimumTrimInterval))
                 {
-                    row.Status = $"RAM nettoyee a {DateTime.Now:HH:mm:ss}.";
+                    row.Status = $"RAM cleaned at {DateTime.Now:HH:mm:ss}.";
                 }
             }
             catch (Exception ex)
@@ -243,7 +243,7 @@ public partial class MainWindow : Window
         row.CoreCount = _settings.DefaultCoreCount;
         row.PriorityClass = _settings.DefaultPriorityClass;
         row.StartCore = 0;
-        row.Status = "Defauts charges.";
+        row.Status = "Defaults loaded.";
     }
 
     private void RecalculateDistributedCores()

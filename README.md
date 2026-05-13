@@ -1,62 +1,63 @@
 # Roblox Instance Optimizer
 
-Outil Windows WPF pour piloter plusieurs instances Roblox.
+Windows WPF tool for managing multiple Roblox instances.
 
-## Fonctionnalites MVP
+## MVP Features
 
-- Detection des processus `RobloxPlayerBeta.exe`
-- Affichage PID, nom de fenetre, RAM actuelle et affinite CPU
-- Reglage de priorite CPU
-- Allocation d'un nombre de coeurs logiques par instance
-- Nettoyage RAM automatique type Mem Reduct via `EmptyWorkingSet`
-- Seuil RAM par instance: quand Roblox depasse le seuil, l'app demande a Windows de reduire sa memoire active
-- Parametres par defaut sauvegardes et appliques automatiquement aux nouvelles instances
-- Repartition automatique des coeurs CPU entre les instances Roblox
+- Detects `RobloxPlayerBeta.exe` processes
+- Shows PID, window name, current RAM, and CPU affinity
+- Sets CPU priority
+- Allocates logical CPU cores per instance
+- Mem Reduct-style automatic RAM cleanup via `EmptyWorkingSet`
+- Per-instance RAM threshold: when Roblox goes above the threshold, the app asks Windows to trim active memory
+- Saved default settings applied automatically to new instances
+- Automatic CPU core distribution across Roblox instances
 
-## Utilisation
+## Usage
 
-1. Lance Roblox.
-2. Lance `RobloxInstanceOptimizer.App` en administrateur.
-3. Clique sur `Scanner`.
-4. Regle le seuil de nettoyage RAM en Mo, le nombre de coeurs et la priorite.
-5. Clique sur `Appliquer selection` ou `Appliquer tout`.
+1. Start Roblox.
+2. Run `RobloxInstanceOptimizer.App` as administrator.
+3. Click `Scan`.
+4. Set the RAM cleanup threshold in MB, core count, and CPU priority.
+5. Click `Apply selected` or `Apply all`.
 
-## Parametres par defaut
+## Default Settings
 
-La zone `Defaut` permet de choisir les valeurs appliquees aux nouvelles instances Roblox:
+The defaults panel controls values applied to new Roblox instances:
 
-- seuil de nettoyage RAM
-- nombre de coeurs
-- priorite CPU
+- RAM cleanup threshold
+- core count
+- CPU priority
 - auto-scan
-- nettoyage RAM auto
-- application automatique aux nouvelles instances
+- automatic RAM cleanup
+- automatic application to new instances
+- automatic CPU core distribution
 
-Clique sur `Sauvegarder defauts` pour les garder au prochain lancement. La config est stockee dans `%AppData%\RobloxInstanceOptimizer\settings.json`.
+Click `Save defaults` to keep them for the next launch. The config is stored at `%AppData%\RobloxInstanceOptimizer\settings.json`.
 
-## Repartition CPU automatique
+## Automatic CPU Distribution
 
-Si `Repartir coeurs auto` est coche, l'app attribue une plage differente a chaque instance.
+If `Auto-distribute cores` is enabled, the app assigns a different CPU core range to each instance.
 
-Exemple avec 36 coeurs et `Coeurs = 2`:
+Example with 36 cores and `Cores = 2`:
 
-- instance 1: coeurs 0-1
-- instance 2: coeurs 2-3
-- instance 3: coeurs 4-5
+- instance 1: cores 0-1
+- instance 2: cores 2-3
+- instance 3: cores 4-5
 - etc.
 
-Quand toutes les plages disponibles sont utilisees, l'app boucle au debut.
+When all available ranges are used, the app loops back to the beginning.
 
-Valeurs de depart conseillees:
+Recommended starting values:
 
-- Compte principal: 2048 a 3072 Mo, 2 a 4 coeurs, priorite `Normal`
-- Compte secondaire leger: 1536 a 2048 Mo, 1 a 2 coeurs, priorite `BelowNormal`
-- Evite de descendre sous 1536 Mo sauf si le jeu est tres leger
+- Main account: 2048 to 3072 MB, 2 to 4 cores, `Normal` priority
+- Lightweight alt: 1536 to 2048 MB, 1 to 2 cores, `BelowNormal` priority
+- Avoid going below 1536 MB unless the game is very lightweight
 
-## Note importante sur la RAM
+## RAM Cleanup Note
 
-Le mode par defaut ne bloque plus la RAM. Il utilise `EmptyWorkingSet`, une approche proche de Mem Reduct.
+The default mode does not hard-limit RAM. It uses `EmptyWorkingSet`, an approach similar to Mem Reduct.
 
-Quand Roblox depasse le seuil choisi, l'app demande a Windows de vider une partie de la memoire active du processus. C'est plus stable qu'un hard limit, mais ce n'est pas une limite absolue: Roblox peut reprendre de la RAM ensuite, donc l'app recommence automatiquement.
+When Roblox goes above the selected threshold, the app asks Windows to trim part of the process active memory. This is more stable than a hard limit, but it is not an absolute cap: Roblox can grow again, so the app repeats cleanup automatically.
 
-Un vrai hard limit via Job Object peut faire crash Roblox si le jeu a besoin de plus de memoire. Ce mode est garde dans le code pour experimentation future, mais l'interface utilise maintenant le nettoyage RAM auto.
+A true Job Object hard limit can crash Roblox if the game needs more memory. That code is kept for future experimentation, but the interface now uses automatic RAM cleanup.
