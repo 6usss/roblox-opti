@@ -11,10 +11,18 @@ internal sealed class RobloxProcessOptimizer : IDisposable
 
     public void Apply(RobloxInstanceRow row)
     {
-        using var process = Process.GetProcessById(row.ProcessId);
+        ApplyCpuSettings(row.ProcessId, row.PriorityClass, row.StartCore, row.CoreCount);
+    }
 
-        process.PriorityClass = row.PriorityClass;
-        process.ProcessorAffinity = BuildAffinityMask(row.StartCore, row.CoreCount);
+    public void ApplyCpuSettings(
+        int processId,
+        ProcessPriorityClass priorityClass,
+        int startCore,
+        int coreCount)
+    {
+        using var process = Process.GetProcessById(processId);
+        process.PriorityClass = priorityClass;
+        process.ProcessorAffinity = BuildAffinityMask(startCore, coreCount);
     }
 
     public bool TrimMemoryIfNeeded(RobloxInstanceRow row, TimeSpan minimumInterval)
@@ -113,7 +121,7 @@ internal sealed class RobloxProcessOptimizer : IDisposable
     {
         if (!EmptyWorkingSet(process.Handle))
         {
-            throw new Win32Exception(Marshal.GetLastWin32Error(), "EmptyWorkingSet a echoue.");
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "EmptyWorkingSet failed.");
         }
     }
 

@@ -13,6 +13,7 @@ public partial class MainWindow : Window
 
     private readonly DispatcherTimer _refreshTimer;
     private readonly RobloxProcessOptimizer _optimizer = new();
+    private readonly Dictionary<int, DateTimeOffset> _startupBoostExpiresByProcessId = new();
     private AppSettings _settings;
 
     public ObservableCollection<RobloxInstanceRow> Instances { get; } = new();
@@ -46,12 +47,14 @@ public partial class MainWindow : Window
             if (AutoRefreshCheckBox.IsChecked == true)
             {
                 RefreshInstances();
+                RunStartupBoostExpiry();
                 RunAutoTrim();
             }
         };
         _refreshTimer.Start();
 
         RefreshInstances();
+        Loaded += async (_, _) => await CheckForUpdatesOnLaunchAsync();
     }
 
     protected override void OnClosed(EventArgs e)
@@ -101,7 +104,7 @@ public partial class MainWindow : Window
             .OrderBy(process => process.Id)
             .ToArray();
         var liveIds = processes.Select(process => process.Id).ToHashSet();
-        var hasNewInstances = false;
+        var newRows = new List<RobloxInstanceRow>();
 
         foreach (var row in Instances.Where(row => !liveIds.Contains(row.ProcessId)).ToArray())
         {
@@ -122,7 +125,7 @@ public partial class MainWindow : Window
                     ApplyDefaults(row);
                     Instances.Add(row);
                     UpdateRuntimeInfo(process, row);
-                    hasNewInstances = true;
+                    newRows.Add(row);
                 }
 
                 UpdateRuntimeInfo(process, row);
@@ -131,12 +134,20 @@ public partial class MainWindow : Window
 
         RecalculateDistributedCores();
 
-        if (hasNewInstances && _settings.AutoApplyDefaultsToNewInstances)
+        if (newRows.Count > 0 && _settings.StartupBoostEnabled)
+        {
+            foreach (var row in newRows)
+            {
+                ApplyStartupBoost(row);
+            }
+        }
+        else if (newRows.Count > 0 && _settings.AutoApplyDefaultsToNewInstances)
         {
             ApplyRows(Instances, refreshAfterApply: false);
         }
 
         _optimizer.PruneDeadJobs(liveIds);
+        PruneStartupBoosts(liveIds);
         StatusText.Text = Instances.Count == 0
             ? "No Roblox instances detected."
             : $"{Instances.Count} Roblox instance(s) detected.";
@@ -277,6 +288,11 @@ public partial class MainWindow : Window
         AutoTrimCheckBox.IsChecked = _settings.AutoTrim;
         AutoApplyDefaultsCheckBox.IsChecked = _settings.AutoApplyDefaultsToNewInstances;
         AutoDistributeCoresCheckBox.IsChecked = _settings.AutoDistributeCpuCores;
+        AutoUpdateCheckBox.IsChecked = _settings.AutoUpdateOnLaunch;
+        StartupBoostCheckBox.IsChecked = _settings.StartupBoostEnabled;
+        StartupBoostSecondsTextBox.Text = _settings.StartupBoostSeconds.ToString();
+        StartupBoostCoreCountTextBox.Text = _settings.StartupBoostCoreCount.ToString();
+        StartupBoostPriorityComboBox.SelectedItem = _settings.StartupBoostPriorityClass;
     }
 
     private void SaveSettingsFromControls()
@@ -298,6 +314,21 @@ public partial class MainWindow : Window
         _settings.AutoTrim = AutoTrimCheckBox.IsChecked == true;
         _settings.AutoApplyDefaultsToNewInstances = AutoApplyDefaultsCheckBox.IsChecked == true;
         _settings.AutoDistributeCpuCores = AutoDistributeCoresCheckBox.IsChecked == true;
+        _settings.AutoUpdateOnLaunch = AutoUpdateCheckBox.IsChecked == true;
+        _settings.StartupBoostEnabled = StartupBoostCheckBox.IsChecked == true;
+        _settings.StartupBoostSeconds = ParseIntOrDefault(
+            StartupBoostSecondsTextBox.Text,
+            _settings.StartupBoostSeconds,
+            minimum: 5,
+            maximum: 600);
+        _settings.StartupBoostCoreCount = ParseIntOrDefault(
+            StartupBoostCoreCountTextBox.Text,
+            _settings.StartupBoostCoreCount,
+            minimum: 1,
+            maximum: Environment.ProcessorCount);
+        _settings.StartupBoostPriorityClass = StartupBoostPriorityComboBox.SelectedItem is ProcessPriorityClass boostPriority
+            ? boostPriority
+            : ProcessPriorityClass.Normal;
         _settings.Save();
 
         LoadSettingsIntoControls();
@@ -308,5 +339,95 @@ public partial class MainWindow : Window
         return int.TryParse(text, out var value)
             ? Math.Clamp(value, minimum, maximum)
             : fallback;
+    }
+
+    private void ApplyStartupBoost(RobloxInstanceRow row)
+    {
+        if (!_settings.AutoApplyDefaultsToNewInstances)
+        {
+            return;
+        }
+
+        try
+        {
+            var boostCores = Math.Clamp(_settings.StartupBoostCoreCount, 1, Environment.ProcessorCount);
+            _optimizer.ApplyCpuSettings(
+                row.ProcessId,
+                _settings.StartupBoostPriorityClass,
+                row.StartCore,
+                boostCores);
+            _startupBoostExpiresByProcessId[row.ProcessId] =
+                DateTimeOffset.UtcNow.AddSeconds(_settings.StartupBoostSeconds);
+            row.Status = $"Launch boost active: {boostCores} core(s), {_settings.StartupBoostPriorityClass}, {_settings.StartupBoostSeconds}s.";
+        }
+        catch (Exception ex)
+        {
+            row.Status = ex.Message;
+        }
+    }
+
+    private void RunStartupBoostExpiry()
+    {
+        var now = DateTimeOffset.UtcNow;
+        foreach (var pair in _startupBoostExpiresByProcessId.ToArray())
+        {
+            if (pair.Value > now)
+            {
+                continue;
+            }
+
+            var row = Instances.FirstOrDefault(instance => instance.ProcessId == pair.Key);
+            if (row is not null)
+            {
+                ApplyRows([row], refreshAfterApply: false);
+                row.Status = "Launch boost ended. Default CPU settings restored.";
+            }
+
+            _startupBoostExpiresByProcessId.Remove(pair.Key);
+        }
+    }
+
+    private void PruneStartupBoosts(IReadOnlySet<int> liveProcessIds)
+    {
+        foreach (var processId in _startupBoostExpiresByProcessId.Keys.ToArray())
+        {
+            if (!liveProcessIds.Contains(processId))
+            {
+                _startupBoostExpiresByProcessId.Remove(processId);
+            }
+        }
+    }
+
+    private async Task CheckForUpdatesOnLaunchAsync()
+    {
+        if (!_settings.AutoUpdateOnLaunch)
+        {
+            return;
+        }
+
+        try
+        {
+            StatusText.Text = "Checking for updates...";
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var result = await UpdateService.CheckForUpdateAsync(cts.Token);
+
+            if (!result.UpdateAvailable)
+            {
+                StatusText.Text = $"Up to date ({result.CurrentVersion}).";
+                return;
+            }
+
+            MessageBox.Show(
+                $"A new version is available ({result.RemoteVersion}). The updater will install it now, then you can restart the app.",
+                "Roblox Instance Optimizer Update",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            UpdateService.StartUpdater();
+            Application.Current.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = $"Update check failed: {ex.Message}";
+        }
     }
 }

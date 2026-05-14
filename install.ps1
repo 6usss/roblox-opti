@@ -34,6 +34,19 @@ function Install-DotNetSdk {
     $env:PATH = "$dotnetDir;$env:PATH"
 }
 
+function Wait-AppExit {
+    $deadline = (Get-Date).AddSeconds(20)
+    while ((Get-Date) -lt $deadline) {
+        $running = Get-Process -Name "RobloxInstanceOptimizer.App" -ErrorAction SilentlyContinue
+        if (-not $running) {
+            return
+        }
+
+        Write-Step "Waiting for the app to close before replacing files"
+        Start-Sleep -Seconds 2
+    }
+}
+
 Write-Step "Preparing"
 if (Test-Path $tempRoot) {
     Remove-Item $tempRoot -Recurse -Force
@@ -58,6 +71,7 @@ dotnet publish (Join-Path $sourceDir "RobloxInstanceOptimizer.App\RobloxInstance
     -o $publishDir
 
 Write-Step "Installing to $installDir"
+Wait-AppExit
 if (Test-Path $installDir) {
     Remove-Item $installDir -Recurse -Force
 }

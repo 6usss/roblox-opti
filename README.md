@@ -12,6 +12,8 @@ Windows WPF tool for managing multiple Roblox instances.
 - Per-instance RAM threshold: when Roblox goes above the threshold, the app asks Windows to trim active memory
 - Saved default settings applied automatically to new instances
 - Automatic CPU core distribution across Roblox instances
+- Automatic update check on launch
+- Temporary launch boost so new Roblox instances can start faster before default limits are restored
 
 ## Usage
 
@@ -32,8 +34,33 @@ The defaults panel controls values applied to new Roblox instances:
 - automatic RAM cleanup
 - automatic application to new instances
 - automatic CPU core distribution
+- automatic update check on launch
+- launch boost duration, core count, and priority
 
 Click `Save defaults` to keep them for the next launch. The config is stored at `%AppData%\RobloxInstanceOptimizer\settings.json`.
+
+## Auto Update
+
+If `Auto-update on launch` is enabled, the app checks the GitHub `VERSION` file at startup.
+
+When a newer version is available, the app starts the installer from:
+
+```text
+https://raw.githubusercontent.com/6usss/roblox-opti/main/install.ps1
+```
+
+The updater replaces the installed files in `%LOCALAPPDATA%\RobloxInstanceOptimizer`.
+
+## Launch Boost
+
+Roblox can start slowly if CPU limits are applied immediately. `Launch boost` gives newly detected Roblox instances temporary CPU settings before restoring the normal defaults.
+
+Default behavior:
+
+- boost for 60 seconds
+- use up to 4 cores
+- use `Normal` priority
+- restore the configured default core count and priority after the timer expires
 
 ## Automatic CPU Distribution
 

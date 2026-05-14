@@ -25,6 +25,16 @@ public sealed class AppSettings
 
     public bool AutoDistributeCpuCores { get; set; } = true;
 
+    public bool AutoUpdateOnLaunch { get; set; } = true;
+
+    public bool StartupBoostEnabled { get; set; } = true;
+
+    public int StartupBoostSeconds { get; set; } = 60;
+
+    public int StartupBoostCoreCount { get; set; } = Math.Min(4, Environment.ProcessorCount);
+
+    public ProcessPriorityClass StartupBoostPriorityClass { get; set; } = ProcessPriorityClass.Normal;
+
     public static string SettingsPath
     {
         get

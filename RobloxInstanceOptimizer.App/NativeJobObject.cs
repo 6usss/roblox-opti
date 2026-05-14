@@ -18,7 +18,7 @@ internal sealed class NativeJobObject : IDisposable
         var handle = CreateJobObjectW(IntPtr.Zero, null);
         if (handle.IsInvalid)
         {
-            throw new Win32Exception(Marshal.GetLastWin32Error(), "CreateJobObjectW a echoue.");
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "CreateJobObjectW failed.");
         }
 
         return new NativeJobObject(handle);
@@ -42,7 +42,7 @@ internal sealed class NativeJobObject : IDisposable
                 ref info,
                 (uint)length))
         {
-            throw new Win32Exception(Marshal.GetLastWin32Error(), "SetInformationJobObject a echoue.");
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "SetInformationJobObject failed.");
         }
     }
 
@@ -50,7 +50,7 @@ internal sealed class NativeJobObject : IDisposable
     {
         if (!AssignProcessToJobObject(_handle, processHandle))
         {
-            throw new Win32Exception(Marshal.GetLastWin32Error(), "AssignProcessToJobObject a echoue.");
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "AssignProcessToJobObject failed.");
         }
     }
 
