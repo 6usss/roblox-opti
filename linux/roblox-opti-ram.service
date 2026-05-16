@@ -1,0 +1,12 @@
+[Unit]
+Description=Roblox Opti Linux RAM Manager
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/roblox-opti-ram
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

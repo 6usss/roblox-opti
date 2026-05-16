@@ -88,3 +88,59 @@ The default mode does not hard-limit RAM. It uses `EmptyWorkingSet`, an approach
 When Roblox goes above the selected threshold, the app asks Windows to trim part of the process active memory. This is more stable than a hard limit, but it is not an absolute cap: Roblox can grow again, so the app repeats cleanup automatically.
 
 A true Job Object hard limit can crash Roblox if the game needs more memory. That code is kept for future experimentation, but the interface now uses automatic RAM cleanup.
+
+## Linux RAM-Only Version
+
+The Linux version is RAM-only. It does not manage CPU cores, CPU priority, or launch boost.
+
+It runs as a small systemd daemon and uses cgroups v2:
+
+- `memory.high` for a soft RAM pressure limit
+- optional `memory.max` for a hard cap
+- automatic process detection by command line patterns
+
+Install on a Linux VPS:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/6usss/roblox-opti/main/install-linux-ram.sh | sudo bash
+```
+
+If `curl` is not installed:
+
+```bash
+wget -qO- https://raw.githubusercontent.com/6usss/roblox-opti/main/install-linux-ram.sh | sudo bash
+```
+
+Config file:
+
+```text
+/etc/roblox-opti-linux/config.json
+```
+
+Default config:
+
+```json
+{
+  "memoryHighMb": 2048,
+  "memoryMaxMb": 0,
+  "scanIntervalSeconds": 5,
+  "processMatch": [
+    "RobloxPlayerBeta.exe",
+    "RobloxPlayerBeta",
+    "sober",
+    "vinegar",
+    "grapejuice"
+  ]
+}
+```
+
+Useful commands:
+
+```bash
+sudo systemctl status roblox-opti-ram.service
+sudo journalctl -u roblox-opti-ram.service -f
+sudo nano /etc/roblox-opti-linux/config.json
+sudo systemctl restart roblox-opti-ram.service
+```
+
+`memoryHighMb` is recommended for stability. `memoryMaxMb` is disabled by default because a hard memory cap can kill or crash the process if the value is too low.

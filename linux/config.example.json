@@ -1,0 +1,12 @@
+{
+  "memoryHighMb": 2048,
+  "memoryMaxMb": 0,
+  "scanIntervalSeconds": 5,
+  "processMatch": [
+    "RobloxPlayerBeta.exe",
+    "RobloxPlayerBeta",
+    "sober",
+    "vinegar",
+    "grapejuice"
+  ]
+}
